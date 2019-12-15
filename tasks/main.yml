@@ -1,0 +1,38 @@
+---
+ - name: Installation nginx
+   become: yes
+   apt: name=nginx state=latest
+ 
+ - name: start
+   become: yes
+   service: name=nginx state=started enabled=true
+   
+ - name: supprimer default.conf
+   become: yes
+   file: path=/etc/nginx/sites-enabled/default state=absent
+   notify: nginx reload
+ 
+ - name: creation du dossier
+   become: yes
+   file: path=/home/natdor/{{domain}} state=directory owner=natdor
+
+ - name: liens vers www
+   become: yes
+   file: src=/home/natdor/{{domain}} dest=/var/www/{{domain}} state=link
+   
+ - name: création d'un fichier html
+   file:
+    path: /home/natdor/local.dev/index.html
+    state: touch
+    mode: u+rw,g-wx,o-rwx
+    modification_time: preserve
+    access_time: preserve
+ 
+ - name: Création de la config nginx
+   template: src=/template/nginx.j2 dest=/etc/nginx/sites-available/{{domain}}
+
+ - name: Activation du domain {{ domain }}
+   file: src=/etc/nginx/sites-available/{{domain}} dest=/etc/nginx/sites-enabled/{{domain}} state=link
+   notify: nginx reload 
+   
+   
